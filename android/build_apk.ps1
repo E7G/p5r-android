@@ -14,7 +14,7 @@ $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } elseif (Test-Path "C:\Androi
 if (-not $env:JAVA_HOME -and (Test-Path "C:\Program Files\Android\Android Studio\jbr")) { $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr" }
 if ($env:JAVA_HOME) { $env:PATH = "$env:JAVA_HOME\bin;$env:PATH" }
 $cmakeDir = Get-ChildItem "$sdk\cmake" -Directory -ErrorAction SilentlyContinue | Select-Object -Last 1
-if ($cmakeDir) { $env:PATH = "$($cmakeDir.FullName)\bin;$env:PATH" }
+if ($cmakeDir) { $env:PATH = "$env:PATH;$($cmakeDir.FullName)\bin" }
 $ndk = "$sdk\ndk\28.2.13676358"
 $bt = "$sdk\build-tools\35.0.0"
 $jar = "$sdk\platforms\android-35\android.jar"
@@ -101,9 +101,10 @@ if (Test-Path $java) {
     $sources = @((Get-ChildItem $java -Recurse -Filter *.java).FullName)
     & "$jdk\bin\javac.exe" -encoding UTF-8 -source 1.8 -target 1.8 -Xlint:-options -bootclasspath $jar -d "$out\classes" @sources
     if ($LASTEXITCODE) { throw "javac failed" }
-    $classes = @((Get-ChildItem "$out\classes" -Recurse -Filter *.class).FullName)
+    & "$jdk\bin\jar.exe" cf "$out\classes.jar" -C "$out\classes" .
+    if ($LASTEXITCODE) { throw "jar failed" }
     $env:JAVA_HOME = $jdk
-    & "$bt\d8.bat" --release --min-api 29 --lib $jar --output "$out\dex" @classes
+    & "$bt\d8.bat" --release --min-api 29 --lib $jar --output "$out\dex" "$out\classes.jar"
     if ($LASTEXITCODE) { throw "d8 failed" }
     [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($apk, "$out\dex\classes.dex", "classes.dex", "Optimal") | Out-Null
 }

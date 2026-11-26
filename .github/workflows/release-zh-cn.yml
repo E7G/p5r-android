@@ -1,0 +1,75 @@
+name: Release Launcher Rework zh-CN
+
+on:
+  push:
+    tags:
+      - 'zh-cn-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-zh-cn-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      VULKAN_SDK: ${{ github.workspace }}/private/third_party/Vulkan-Headers-1.4.357
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Android build dependencies
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build zip unzip curl
+          mkdir -p private/third_party/ryubing
+          git clone --depth 1 --branch v1.4.357 https://github.com/KhronosGroup/Vulkan-Headers "$VULKAN_SDK"
+          curl -fSL --retry 4 https://codeberg.org/Software_arch/Ryubing/archive/a82350bb77.tar.gz -o private/third_party/ryubing.tar.gz
+          tar -xzf private/third_party/ryubing.tar.gz -C private/third_party/ryubing --strip-components=1
+      - name: Build shader translator from source
+        run: docker run --rm -v "$PWD:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 sh games/p5r/tools/build_harness_android.sh
+      - name: Prepare local CI signing key
+        run: |
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+      - name: Compile Release APK
+        run: NX_DIAGNOSTICS=0 bash games/p5r/tools/build_android.sh
+      - name: Verify and stage release
+        run: |
+          mkdir -p dist
+          APK=dist/P5R-0.5.13-launcher-a20-fix2-zh-CN-release.apk
+          cp private/p5r/apk_nce/p5r.apk "$APK"
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt2" dump badging "$APK" | tee dist/badging.txt
+          grep -F "package: name='io.github.p5rrecomp.opt' versionCode='128' versionName='0.5.13-launcher-a20-fix2'" dist/badging.txt
+          grep -F "native-code: 'arm64-v8a'" dist/badging.txt
+          if grep -q application-debuggable dist/badging.txt; then exit 1; fi
+          unzip -Z1 "$APK" > dist/entries.txt
+          grep -Fx classes.dex dist/entries.txt
+          for lib in libp5r.so libp5rimport.so libspirvharness.so libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so; do
+            grep -Fx "lib/arm64-v8a/$lib" dist/entries.txt
+          done
+          (cd dist && sha256sum *.apk > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: P5R-launcher-rework-zh-CN
+          path: dist/
+          if-no-files-found: error
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/zh-cn-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.apk dist/SHA256SUMS.txt --verify-tag --title "P5R Launcher Rework 0.5.13 a20-fix2 简体中文版" --notes "Based on Chakeyy/p5r-android build/fix-pass (081c143). Simplified Chinese launcher, 191 added translation mappings, ARM64 NCE Release build. CI-generated development signing certificate; not the upstream signature. Requires the user's own game data. Physical device testing not performed."

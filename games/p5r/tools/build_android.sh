@@ -73,7 +73,7 @@ if [ "$configure" = 1 ]; then
     cmake -S "$root" -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake" \
         -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DANDROID_STL=c++_static \
-        -DNX_GAME=p5r -DNX_NCE=ON -DNX_DIAGNOSTICS=$diag
+        -DNX_GAME=p5r -DNX_NCE=ON -DNX_RELEASE=ON -DNX_DIAGNOSTICS=$diag
 fi
 cmake --build "$build" --target p5r p5rimport
 
@@ -86,6 +86,9 @@ mkdir -p "$out/lib/arm64-v8a" "$out/res"
 "$llvm/llvm-strip" --strip-unneeded -o "$out/lib/arm64-v8a/libp5r.so" "$build/libp5r.so"
 "$llvm/llvm-strip" --strip-unneeded -o "$out/lib/arm64-v8a/libp5rimport.so" "$build/libp5rimport.so"
 "$llvm/llvm-strip" --strip-unneeded -o "$out/lib/arm64-v8a/libspirvharness.so" "$harness"
+for hook in libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so; do
+    "$llvm/llvm-strip" --strip-unneeded -o "$out/lib/arm64-v8a/$hook" "$build/adrenotools/src/hook/$hook"
+done
 
 "$bt/aapt2" compile --dir "$root/android/res" -o "$out/res.zip"
 res_zips=("$out/res.zip")
@@ -109,7 +112,7 @@ if [ -d "$java" ]; then
     javac -encoding UTF-8 -source 1.8 -target 1.8 -Xlint:-options -bootclasspath "$jar" -d "$out/classes" \
         @"$out/sources.txt"
     find "$out/classes" -name '*.class' > "$out/classes.txt"
-    "$bt/d8" --release --min-api 30 --lib "$jar" --output "$out/dex" @"$out/classes.txt"
+    "$bt/d8" --release --min-api 29 --lib "$jar" --output "$out/dex" @"$out/classes.txt"
     (cd "$out/dex" && zip -q -j "$out/base.apk" classes.dex)
 fi
 
