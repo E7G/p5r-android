@@ -1,160 +1,101 @@
-# Persona 5 Royal for Android (native port)
+# P5R Android · Launcher Rework 简体中文版
 
-An Android app that runs **your own copy** of Persona 5 Royal (Nintendo Switch, version 1.0.0) natively on an arm64
-phone or tablet. The Switch's operating system services, its audio, video and input, and NVN (the Switch's graphics
-API) are reimplemented on Android, with Vulkan for the graphics. The game's own code runs directly on the phone's CPU:
-the Switch and Android phones share the same CPU architecture (AArch64).
+[![Release](https://img.shields.io/github/v/release/E7G/p5r-android?include_prereleases&label=Release)](https://github.com/E7G/p5r-android/releases)
+[![构建状态](https://github.com/E7G/p5r-android/actions/workflows/release-zh-cn.yml/badge.svg)](https://github.com/E7G/p5r-android/actions/workflows/release-zh-cn.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**No PC needed:** install the APK, pick your game file (`.nsp` or `.xci`) and your `prod.keys` on the phone, let it
-prepare the game once (a few minutes), and play. The game is read from your file as it is; nothing is extracted.
+《女神异闻录 5 皇家版》（Persona 5 Royal）的 Android 原生运行项目，基于 [Chakeyy/p5r-android](https://github.com/Chakeyy/p5r-android) 的 Launcher Rework 修复版进行启动器简体中文本地化。
+
+**本项目不是 P5R-Android-Plus，也没有引入 Plus 的渲染代码。**
+
+## 下载
+
+前往 [GitHub Releases](https://github.com/E7G/p5r-android/releases) 下载汉化 APK。
+
+| 项目 | 说明 |
+| --- | --- |
+| 基础版本 | 0.5.13-launcher-a20-fix2 |
+| 上游分支 | build/fix-pass |
+| 上游提交 | [081c143](https://github.com/Chakeyy/p5r-android/commit/081c1437ebec3bef6f3114dd389d61491dd37880) |
+| 汉化分支 | zh-CN-launcher-fix2 |
+| 包名 | io.github.p5rrecomp.opt |
+| 架构 | ARM64-v8a |
+| 最低系统 | Android 10（API 29） |
+
+每个汉化 Release 由 GitHub Actions 从源码构建，包含 APK 和 SHA256 校验文件。构建进度可在 [Actions](https://github.com/E7G/p5r-android/actions/workflows/release-zh-cn.yml) 查看。
+
+> [!NOTE]
+> Release 使用本地或 CI 生成的开发签名，而非上游官方签名。不同签名的版本可能无法覆盖安装，请提前备份存档。CI 未配置固定签名时，不同发布版本之间也可能需要重新安装。
+
+## 汉化内容
+
+- 启动器默认使用简体中文，不依赖系统语言。
+- 新增 191 条中文翻译映射，覆盖主页、游戏文件选择、准备流程、显示、性能、控制及外观设置。
+- 汉化 GPU 驱动管理、存档导入导出、CPK 模组导入和日志导出等界面。
+- 保留 Launcher Rework 的动态背景、界面音效及触觉反馈。
+- 保留上游运行逻辑与默认性能参数，修复 Windows 构建时 D8 命令行过长问题。
+
+汉化针对启动器及相关 Android 界面，不包含游戏剧情或游戏资源汉化。尚未完成全部界面的真机核验，部分底层错误信息可能仍显示英文。
+
+## 系统要求
+
+- Android 10 或更新版本，ARM64 处理器，支持 Vulkan 1.1。
+- 建议至少 6 GB RAM，8 GB 或以上更佳。
+- 预留游戏文件所需空间（约 15 GB），以及约 1 GB 的着色器缓存和存档空间。
+- 自行合法取得的 Nintendo Switch 版 Persona 5 Royal **1.0.0 本体**及自己的 prod.keys。
+
+## 安装与使用
+
+1. 从 Releases 下载 APK 并安装。
+2. 打开启动器，按提示授予所有文件访问权限。
+3. 在文件设置中选择自己的 NSP/XCI 游戏文件和 prod.keys（如需 title.keys，也可一并选择）。
+4. 点击「准备游戏」，保持应用开启，等待首次着色器转换完成。
+5. 点击「开始游戏」。后续运行无需重复准备，勿移动或删除游戏文件。
+
+游戏文本语言可在启动器设置中选择，游戏语音语言在游戏内设置。
+
+存档路径：`内部存储/Persona 5 Royal/user/save`。可使用启动器的存档导入和导出功能进行备份。
+
+LayeredFS 模组可放置于 `内部存储/Persona 5 Royal/mods/<模组名称>/romfs/`，详见 [模组文档](docs/MODS.md)。
+
+## 兼容性说明
+
+本 fork 保留 Chakeyy 原版 Launcher Rework 的 GPU 与运行逻辑，不承诺所有骁龙、联发科或其他设备均可稳定运行。当前汉化版本已完成本地 Release 编译与 APK 签名验证，尚未完成真机兼容性测试。
+
+遇到闪退或画面异常，请通过启动器导出日志，并在 [Issues](https://github.com/E7G/p5r-android/issues) 提供手机型号、SoC/GPU、Android 版本、内存、复现步骤及相关日志。不要附带游戏文件、密钥或其他隐私信息。
+
+## 构建
+
+本项目采用 NCE（Native Code Execution）方式运行，不依赖 Gradle。
+
+构建环境包括 Android SDK 35、Build Tools 35.0.0、NDK 28.2.13676358、JDK 17+、CMake 3.25+、Ninja、Vulkan Headers 1.4.357，以及用于构建着色器库的 Linux/Docker .NET 10 NativeAOT 环境。
+
+- 自动构建和发布：[release-zh-cn.yml](.github/workflows/release-zh-cn.yml)
+- Linux 构建脚本：[build_android.sh](games/p5r/tools/build_android.sh)
+- Windows 构建脚本：[build_apk.ps1](android/build_apk.ps1)
+- 着色器转换：[相关技术文档](docs/nvn/TRANSLATOR.md)
+
+完成依赖准备后，在 Windows PowerShell 下执行：
+
+```powershell
+.\android\build_apk.ps1 -Game p5r -Nce -Release
+```
+
+输出路径：`private/p5r/apk_nce/p5r.apk`。
+
+## 致谢与许可
+
+- [Chakeyy/p5r-android](https://github.com/Chakeyy/p5r-android)：Launcher Rework 及本 fork 的基础代码。
+- [Brandon04Gonzalez](https://github.com/Brandon04Gonzalez)：Persona 5 Royal Android 移植项目。
+- [BelmanteGu / SwitchGamesRecomp](https://github.com/BelmanteGu/SuperMarioWonderRecomp)：Switch 运行时基础。
+- [Ryujinx / Ryubing](https://github.com/Ryubing/Ryujinx)：着色器转换器。
+- [E7G](https://github.com/E7G)：本 fork 的简体中文本地化与构建发布维护。
+
+原项目社区：[Discord](https://discord.gg/rMgRneBTCe)（英语、西班牙语）；自愿支持原开发者：[GitHub Sponsors](https://github.com/sponsors/Brandon04Gonzalez)。
+
+保留原项目 MIT 许可证：[LICENSE](LICENSE)；第三方许可详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 > [!IMPORTANT]
-> **No game files are included, here or in the APK.** This repository and its releases hold no game code, assets,
-> shaders, keys or firmware. The APK is only the engine: it reads the game from your own dump. You need your own
-> legally dumped copy of the game (the base game, version 1.0.0) and your own `prod.keys`. How to dump them from your
-> console is **not** covered here. Please do not ask for game files or keys.
-
-Persona 5 Royal is © ATLUS / © SEGA. This is an unofficial fan project, not affiliated with or endorsed by ATLUS,
-SEGA or Nintendo.
-
-## Community and support
-
-- **Discord** (English and Spanish channels), for news, help and testing: https://discord.gg/rMgRneBTCe
-- **Support the developer (optional):** [GitHub Sponsors](https://github.com/sponsors/Brandon04Gonzalez). These ports
-  are free and made for preservation. Donating is entirely voluntary and helps with the costs of making them (test
-  devices, hardware, servers). Nothing is locked behind a donation.
-
-## Install
-
-1. Copy your **Persona 5 Royal 1.0.0** `.nsp` (or `.xci`) and your `prod.keys` to the phone (the Download folder is
-   fine). The base game only: not the update.
-2. Install **P5R** from the [Releases](../../releases) page (allow installing apps from your browser or file manager
-   when Android asks).
-3. Open it and allow "All files access" (for its folder `Internal storage/Persona 5 Royal`: settings, saves, shaders).
-4. **Game file → Choose**: pick your `.nsp`/`.xci`. **Keys → Choose**: pick your `prod.keys` (and `title.keys` too, if
-   your dump needs it; you can select both). The app keeps the keys in its private storage; they are not uploaded or
-   included in the APK.
-5. Press **Prepare the game**. Keep the app open: it checks the game and translates its ~30,000 shaders for your GPU
-   (about two minutes on a mid-range tablet; once).
-6. Press **Play**.
-
-Keep the game file where it is: every start reads the game from it. Saves are kept in
-`Internal storage/Persona 5 Royal/user/save`; the home screen can import and export them. Mods (LayeredFS style) can be
-placed in `Internal storage/Persona 5 Royal/mods/<ModName>/romfs/...` (see [docs/MODS.md](docs/MODS.md)).
-
-### Options
-
-Text language, resolution (360p, 480p, 720p, or 1080p), interface resolution, graphics (texture detail), frame rate
-cap (30, or 60 experimental), shadows, FPS counter, **Fullscreen (stretch)**, **Crowd NPCs** (toggle off to boost FPS in busy areas like Shibuya), **Post-processing / Bloom** (toggle off for lighter GPU load), **Touch controls** (show, size, opacity, L3/R3 buttons, and custom layout editor), **Touch stick & camera sensitivity** (50% to 250%), **Physical gamepad layout** (Nintendo vs Xbox/Android A/B and X/Y swap), **Import CPK** (for fan translations / language packs), and **Export logs** (generate and share debug logs directly from the device).
-
-## Requirements
-
-- An arm64 Android phone or tablet with **Android 10 or newer** and **Vulkan 1.1**, 6 GB of RAM or more (8 GB
-  recommended).
-- Storage: the game file (about 15 GB) plus about 1 GB for the translated shaders and saves.
-- Your own dump of **Persona 5 Royal 1.0.0** (US `01005CA01580E000`, EU `01004B10157F2000`, JP `0100B880154FC000`, or Asia `01006BB00C6F0000`) and your console's `prod.keys`.
-
-## Status
-
-The no-PC flow (selecting the game and keys, preparing shaders, and launching from the NSP) has been verified on **one
-device** so far:
-
-| Device | SoC / GPU | Results |
-|---|---|---|
-| Lenovo Tab M11 (Android 14, 8 GB) | Snapdragon 685 / Adreno 610, Vulkan 1.1 | menus 60 fps, 3D title ~14 fps, the casino ~20 fps |
-
-The Adreno 610 is a low-end GPU: on faster phones expect more. Other GPUs (Mali, PowerVR, Xclipse, newer Adreno) are
-untested. Reports are welcome (see [Reporting problems](#reporting-problems)).
-
-What works: the menus, films (hardware VP9), sound, cutscenes in sync, battles, saving and loading, 30 or 60 fps cap,
-touch controls (movable) and game controllers, the text language of your choice.
-
-Known limits: version 1.0.0 only (not the update); performance on low-end GPUs; the shadows option costs a lot on
-weak GPUs (off by default).
-
-## How it works
-
-- **Native execution (the loader).** The APK reads `main` and `sdk` from your game file's ExeFS, maps and links them
-  as the Switch's loader would, and runs them on the phone's CPU (`runtime/src/nce/`). The few instructions that cannot
-  run on Android as they are get patched into small stubs: system calls (`svc`), the thread-pointer registers, and the
-  system counter. Calls into Switch system libraries go to the runtime's implementations.
-- **The game file, read in place.** The NSP/XCI is opened with your keys (`android/wonder/importer/nxgame.h`) and the
-  game's files are decrypted on the fly as the game reads them (`runtime/src/game_image.cpp`).
-- **Shaders** are translated once, on the phone, from the game's Maxwell shaders to SPIR-V with
-  [Ryujinx](https://github.com/Ryubing/Ryujinx)'s shader translator (MIT), compiled to a native Android library with
-  .NET NativeAOT (`libspirvharness.so`). The extraction is `games/p5r/import/`.
-- **The runtime** is the Switch runtime of
-  [Super Mario Bros. Wonder Recomp](https://github.com/BelmanteGu/SuperMarioWonderRecomp) (SwitchGamesRecomp, MIT,
-  by BelmanteGu / Projeto Belmante). It provides the kernel, the services, NVN on Vulkan, audio (AAudio), hardware video
-  decoding (MediaCodec) and touch controls. This port adds Persona 5 Royal's needs and the native loader.
-
-The project started as a static recompilation (the game's code translated to C++), the upstream project's approach.
-That build is still there for debugging on Windows (`games/p5r/tools/build_pc.cmd`), but it needs your own
-recompiled game code, so it is private by nature. The Android APK is the native build (`NX_NCE`), which holds no game
-code and can be shared. `games/p5r/tools/prepare_data.ps1` still prepares a data folder on a PC, for that build or
-for testing.
-
-## Building the APK
-
-On Windows, with the Android SDK (`ANDROID_HOME`, or Android Studio's default location; platform 35, build-tools
-35.0.0, NDK 28.2.13676358), a JDK 17+ (`JAVA_HOME`, or Android Studio's own), the Vulkan headers 1.4.357, and Docker
-Desktop (once, for the shader translator library):
-```powershell
-python -m venv private\venv; private\venv\Scripts\pip install cmake ninja
-git clone --depth 1 --branch v1.4.357 https://github.com/KhronosGroup/Vulkan-Headers private\third_party\Vulkan-Headers-1.4.357
-# the translator: Ryubing's source, then the library (NativeAOT for Android needs Linux: a Docker container)
-mkdir private\third_party\ryubing
-curl.exe -L -o private\third_party\ryubing.tar.gz https://codeberg.org/Software_arch/Ryubing/archive/a82350bb77.tar.gz
-tar -xzf private\third_party\ryubing.tar.gz -C private\third_party\ryubing --strip-components=1
-docker run --rm -v "${PWD}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 sh games/p5r/tools/build_harness_android.sh
-games\p5r\tools\build_android.cmd -Nce            # -> private\p5r\apk_nce\p5r.apk; -Install installs it with adb
-```
-The APK is signed with your Android debug key (`%USERPROFILE%\.android\debug.keystore`; Android Studio makes it, or
-`keytool -genkeypair -keystore %USERPROFILE%\.android\debug.keystore -storepass android -keypass android -alias
-androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -validity 10000`). Without `-Nce` the script
-builds the recompiled flavour, which needs your own recompiled game code in `private\p5r\gen` (see `docs/RECOMP.md`)
-and must never be shared.
-
-## Reporting problems
-
-Open an issue with your phone's model, SoC/GPU, Android version and RAM, what you did and what happened, and the log:
-```
-adb logcat -s p5r:V > p5r-log.txt
-```
-(run it before starting the game). Never attach game files, keys, or screenshots of copyrighted content beyond what
-the report needs.
-
-## En español
-
-Una app de Android que ejecuta **tu propia copia** de Persona 5 Royal (Switch, versión 1.0.0) de forma nativa en un
-móvil o tablet arm64. **No hace falta PC.** El APK no lleva nada del juego: lo lee de tu propio archivo.
-
-- **Discord** (canales en español e inglés), para novedades, ayuda y pruebas: https://discord.gg/rMgRneBTCe
-- **Apoyar al desarrollador (opcional):** [GitHub Sponsors](https://github.com/sponsors/Brandon04Gonzalez). Los ports
-  son gratis y se hacen para preservación. Donar es totalmente voluntario y ayuda con los gastos que conlleva hacerlos
-  (dispositivos de prueba, equipo, servidores). No hay nada de pago.
-
-1. Copia al móvil tu `.nsp` (o `.xci`) de Persona 5 Royal 1.0.0 (el juego base, sin la actualización) y tu `prod.keys`
-   (por ejemplo a Descargas).
-2. Instala **P5R** desde [Releases](../../releases).
-3. Ábrelo y permite el acceso a todos los archivos.
-4. **Archivo del juego → Elegir**: tu `.nsp`/`.xci`. **Claves → Elegir**: tu `prod.keys`. La app guarda las claves en
-   su almacenamiento privado; no se suben ni se incluyen en el APK.
-5. Pulsa **Preparar el juego** y deja la app abierta: comprueba el juego y traduce sus shaders (unos dos minutos, una
-   sola vez).
-6. Pulsa **Jugar**.
-
-No borres ni muevas el archivo del juego: cada vez que juegas se lee de ahí. Puedes poner mods (estilo LayeredFS) en
-`Almacenamiento interno/Persona 5 Royal/mods/<Nombre>/romfs/...` (ver [docs/MODS.md](docs/MODS.md)). En **Icono → Elegir
-imagen** puedes crear un acceso directo con la imagen que quieras. No se proporcionan juegos ni claves.
-
-## Credits and license
-
-- Runtime: [SwitchGamesRecomp / Super Mario Bros. Wonder Recomp](https://github.com/BelmanteGu/SuperMarioWonderRecomp)
-  by BelmanteGu (Projeto Belmante), MIT.
-- Shader translation: Ryujinx's shader translator (Ryubing), MIT, built into the APK as a native library.
-- The native-execution idea is the one Switch emulators call NCE; this implementation is written for this runtime.
-- Like the upstream project, this port was written with a lot of AI assistance (Anthropic's Claude), directed and
-  tested by a human.
-
-MIT License, see [LICENSE](LICENSE).
+> 本仓库及 APK 不提供游戏本体、游戏素材、原版着色器、游戏密钥或固件。请使用自己合法拥有的游戏副本及密钥。
+>
+> Persona 5 Royal 的相关权利归 ATLUS / SEGA 所有。本项目是非官方爱好者项目，与 ATLUS、SEGA 和 Nintendo 无隶属或授权关系。
