@@ -40,6 +40,7 @@
 #include <nx/game.h>
 #include <nx/runtime.h>
 
+#include "audio_gain.h"
 #include "diagnostics.h"
 #include "kernel.h"
 #include "platform.h"
@@ -67,6 +68,7 @@ uint64_t g_device = 0;                      // frames the callback gave the devi
 std::atomic<uint64_t> g_latency_ns{0};      // audio_latency_ns
 std::deque<Pending> g_pending;
 std::atomic<uint32_t> g_delay_frames{0};
+std::atomic<int> g_audio_gain_percent{100};
 std::atomic<uint64_t> g_occ_min{~uint64_t(0)}, g_occ_max{0};
 std::atomic<uint64_t> g_truncations{0}, g_pending_max{0};
 std::atomic<uint64_t> g_latency_ok{0}, g_latency_early{0};
@@ -128,6 +130,7 @@ aaudio_data_callback_result_t audio_cb(AAudioStream*, void*, void* out, int32_t 
         }
         pending_now = g_pending.size();
     }
+    apply_audio_gain(static_cast<int16_t*>(out), frames, g_audio_gain_percent.load(std::memory_order_relaxed));
     cb_stats(frames, missing * 4);
     for (void* c : finished) g_done(c);
 #if NX_DIAGNOSTICS_ON
@@ -169,6 +172,10 @@ void audio_reopen_if_disconnected() {
     }
 }
 }  // namespace
+
+void audio_set_gain(const char* percent) {
+    g_audio_gain_percent.store(parse_audio_gain_percent(percent), std::memory_order_relaxed);
+}
 
 bool audio_open(AudioDone done) {
     g_done = done;

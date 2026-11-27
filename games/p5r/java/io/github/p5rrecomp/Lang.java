@@ -56,6 +56,8 @@ final class Lang {
     }
 
     static {
+        ZH.put("Game Audio Gain", "游戏音量增益");
+        ZH.put("Boost game audio with a soft limiter; restart the game to apply", "提升游戏音量并柔和限幅；重启游戏后生效");
         ZH.put("3D Resolution", "3D 分辨率");
         ZH.put("3D scene render scale (UI stays crisp)", "3D 场景渲染比例（界面保持清晰）");
         ZH.put("Interface Resolution", "界面分辨率");

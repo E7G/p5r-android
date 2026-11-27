@@ -28,6 +28,10 @@ jobs:
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
+      - name: Test audio gain
+        run: |
+          g++ -std=c++17 -O2 test-audio-gain.cpp -o /tmp/p5r-audio-gain-test
+          /tmp/p5r-audio-gain-test
       - name: Android build dependencies
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358"
@@ -48,12 +52,12 @@ jobs:
       - name: Verify and stage release
         run: |
           mkdir -p dist
-          APK=dist/P5R-0.5.13-launcher-a20-fix2-zh-CN-release.apk
+          APK=dist/P5R-0.5.13-launcher-a20-fix2-zh-CN-audio1-release.apk
           cp private/p5r/apk_nce/p5r.apk "$APK"
           BT="$ANDROID_HOME/build-tools/35.0.0"
           "$BT/apksigner" verify --verbose "$APK"
           "$BT/aapt2" dump badging "$APK" | tee dist/badging.txt
-          grep -F "package: name='io.github.p5rrecomp.opt' versionCode='128' versionName='0.5.13-launcher-a20-fix2'" dist/badging.txt
+          grep -F "package: name='io.github.p5rrecomp.opt' versionCode='129' versionName='0.5.13-launcher-a20-fix2-audio1'" dist/badging.txt
           grep -F "native-code: 'arm64-v8a'" dist/badging.txt
           if grep -q application-debuggable dist/badging.txt; then exit 1; fi
           unzip -Z1 "$APK" > dist/entries.txt
@@ -72,4 +76,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/*.apk dist/SHA256SUMS.txt --verify-tag --title "P5R Launcher Rework 0.5.13 a20-fix2 简体中文版" --notes "Based on Chakeyy/p5r-android build/fix-pass (081c143). Simplified Chinese launcher, 191 added translation mappings, ARM64 NCE Release build. CI-generated development signing certificate; not the upstream signature. Requires the user's own game data. Physical device testing not performed."
+          gh release create "$GITHUB_REF_NAME" dist/*.apk dist/SHA256SUMS.txt --verify-tag --title "P5R Launcher Rework 0.5.13 a20-fix2 简体中文音量增强版" --notes "Based on Chakeyy/p5r-android build/fix-pass (081c143). Simplified Chinese launcher, 193 added translation mappings, adjustable game audio gain (50-200%, default 150%), stereo-linked soft limiting, ARM64 NCE Release build. CI-generated development signing certificate; not the upstream signature. Requires the user's own game data. Physical device testing not performed."

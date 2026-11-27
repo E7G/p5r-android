@@ -1442,6 +1442,7 @@ extern "C" void android_main(android_app* app) {
         unsetenv("NX_FXAA");
         unsetenv("NX_COLOR_PROFILE");
         unsetenv("NX_ASYNC_PIPELINES");
+        unsetenv("NX_AUDIO_GAIN");
         std::ifstream f(g_root + "/config.txt");
         std::string line;
         while (std::getline(f, line)) {
@@ -1454,6 +1455,9 @@ extern "C" void android_main(android_app* app) {
                 setenv(key.c_str(), value.c_str(), 1);
             }
         }
+        const char* gain = std::getenv("NX_AUDIO_GAIN");
+        if (!gain) gain = std::string(nx::game::kInfo.title) == "Persona 5 Royal" ? "150" : "100";
+        audio_set_gain(gain);
         // NX_HANDHELD=0 in config.txt (the launcher's TV mode): docked, 1080p. svc_am.cpp tests only whether the variable
         // exists, so "0" must remove it.
         if (const char* h = getenv("NX_HANDHELD"); h && h[0] == '0')

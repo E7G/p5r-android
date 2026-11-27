@@ -760,6 +760,13 @@ public class Launcher extends Activity {
                 new String[] {"2", "0"},
                 new String[] {"ASÍNCRONO", "SÍNCRONO"},
                 new String[] {"ASYNC", "SYNC"}, 0, false));
+        options.add(new Option(TAB_PERFORMANCE, "NX_AUDIO_GAIN",
+                "Volumen del juego", "Game Audio Gain",
+                "Aumenta el volumen del juego con limitador suave; reinicia el juego para aplicar",
+                "Boost game audio with a soft limiter; restart the game to apply",
+                new String[] {"50", "75", "100", "125", "150", "175", "200"},
+                new String[] {"50%", "75%", "100%", "125%", "150%", "175%", "200%"},
+                new String[] {"50%", "75%", "100%", "125%", "150%", "175%", "200%"}, 4, true));
         options.add(new Option(TAB_PERFORMANCE, "GRAPHICS",
                 "Calidad de texturas", "Texture Quality",
                 "Sesgo de mipmaps (Nítido usa -0.5 para mayor detalle)",

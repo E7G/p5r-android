@@ -13,5 +13,6 @@ void show_toast(const char* msg);                  // platform_android.cpp: shor
 // platform_android.cpp: the input device the player's buttons and sticks came from (rumble goes to its motors when it
 // is an external controller that has some).
 void note_controller(int32_t device_id);
+void audio_set_gain(const char* percent);
 
 }  // namespace nx::plat
